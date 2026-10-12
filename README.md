@@ -33,6 +33,14 @@ go mod download
 
 ## Run the API
 
+Create a `.env` file in the project root to configure the port:
+
+```env
+PORT=9898
+```
+
+The `PORT` value must be between `1` and `65535`. If it is not set, the API uses port `9898`.
+
 ```bash
 go run main.go
 ```
@@ -40,7 +48,7 @@ go run main.go
 Server starts on:
 
 ```text
-http://localhost:8080
+http://localhost:9898
 ```
 
 ## API Endpoints
@@ -69,7 +77,6 @@ Response:
 
 - `lang` (string, optional): transcript language code
   - default: `en`
-  - supports comma-separated fallback order, for example: `lang=en,es,de`
 - `fulltext` (boolean-like string, optional): return merged transcript text
   - default: `false`
   - use `true` to get merged text output
@@ -77,7 +84,7 @@ Response:
 #### Example: Structured Transcript (default)
 
 ```bash
-curl "http://localhost:8080/transcript/dQw4w9WgXcQ?lang=en"
+curl "http://localhost:9898/transcript/dQw4w9WgXcQ?lang=en"
 ```
 
 Example response:
@@ -100,7 +107,7 @@ Example response:
 #### Example: Full Text Transcript
 
 ```bash
-curl "http://localhost:8080/transcript/dQw4w9WgXcQ?lang=en&fulltext=true"
+curl "http://localhost:9898/transcript/dQw4w9WgXcQ?lang=en&fulltext=true"
 ```
 
 Example response:
@@ -129,56 +136,15 @@ Status code: `400`
 
 ### Transcript Not Found / Fetch Error
 
-If transcript retrieval fails because subtitles do not exist for requested language(s):
+If transcript retrieval fails (for example unavailable subtitles or upstream errors):
 
 ```json
 {
-  "error": "No transcript found for the requested language(s)",
-  "cause": "<short explanation>"
+  "error": "<upstream error message>"
 }
 ```
 
 Status code: `404`
-
-### Age Restricted Video
-
-If the target video is age-restricted:
-
-```json
-{
-  "error": "This video is age-restricted",
-  "cause": "<short explanation>"
-}
-```
-
-Status code: `403`
-
-### Request Blocked by YouTube (Cloud IP)
-
-If YouTube blocks the server IP (common on cloud platforms):
-
-```json
-{
-  "error": "YouTube blocked requests from this server IP",
-  "hint": "Configure YT_PROXY_HTTP and/or YT_PROXY_HTTPS with a residential rotating proxy, then retry",
-  "cause": "<short explanation>"
-}
-```
-
-Status code: `429`
-
-### Upstream YouTube Failure
-
-If YouTube requests fail for non-404 reasons:
-
-```json
-{
-  "error": "Failed to fetch transcript from YouTube",
-  "cause": "<short explanation>"
-}
-```
-
-Status code: `502`
 
 ### Internal Server Error
 
@@ -195,9 +161,9 @@ Status code: `500`
 ## Quick Test (PowerShell)
 
 ```powershell
-Invoke-RestMethod "http://localhost:8080/health"
-Invoke-RestMethod "http://localhost:8080/transcript/dQw4w9WgXcQ?lang=en"
-Invoke-RestMethod "http://localhost:8080/transcript/dQw4w9WgXcQ?lang=en&fulltext=true"
+Invoke-RestMethod "http://localhost:9898/health"
+Invoke-RestMethod "http://localhost:9898/transcript/dQw4w9WgXcQ?lang=en"
+Invoke-RestMethod "http://localhost:9898/transcript/dQw4w9WgXcQ?lang=en&fulltext=true"
 ```
 
 ## Notes
@@ -205,17 +171,3 @@ Invoke-RestMethod "http://localhost:8080/transcript/dQw4w9WgXcQ?lang=en&fulltext
 - This API expects a plain YouTube video ID in the route (not a full YouTube URL).
 - `fulltext=true` concatenates snippet text with spaces.
 - Language availability depends on the target video subtitles.
-
-## Proxy Configuration (Optional)
-
-To reduce YouTube IP blocking on cloud hosts (for example Render), set one or both environment variables:
-
-- `YT_PROXY_HTTP`
-- `YT_PROXY_HTTPS`
-
-Example:
-
-```bash
-YT_PROXY_HTTP=http://user:pass@proxy-host:port
-YT_PROXY_HTTPS=http://user:pass@proxy-host:port
-```
