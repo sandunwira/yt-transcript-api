@@ -96,12 +96,17 @@ func main() {
 		panic(fmt.Errorf("load .env: %w", err))
 	}
 
+	gin.SetMode(gin.ReleaseMode)
+
 	port, err := getPort()
 	if err != nil {
 		panic(err)
 	}
 
 	r := gin.Default()
+	if err := r.SetTrustedProxies(nil); err != nil {
+		panic(fmt.Errorf("configure trusted proxies: %w", err))
+	}
 	r.GET("/transcript/:id", getTranscript)
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})

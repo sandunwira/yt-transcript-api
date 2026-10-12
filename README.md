@@ -51,6 +51,39 @@ Server starts on:
 http://localhost:9898
 ```
 
+### Run in production on Windows
+
+Build a standalone executable instead of using `go run`:
+
+```powershell
+go build -trimpath -ldflags="-s -w" -o yt-transcript-api.exe .
+```
+
+Keep `.env` beside `yt-transcript-api.exe`, then start it:
+
+```powershell
+.\yt-transcript-api.exe
+```
+
+For a background process that writes logs to files:
+
+```powershell
+Start-Process -FilePath .\yt-transcript-api.exe `
+  -RedirectStandardOutput .\server.log `
+  -RedirectStandardError .\server-error.log
+```
+
+Verify that it is running:
+
+```powershell
+Invoke-RestMethod http://localhost:9898/health
+```
+
+The application runs Gin in release mode and does not trust forwarded proxy
+headers by default. If you expose it to the internet, prefer placing it
+behind a reverse proxy such as IIS or Caddy for HTTPS, and open only the
+proxy's port in Windows Firewall.
+
 ## API Endpoints
 
 ### 1) Health Check
